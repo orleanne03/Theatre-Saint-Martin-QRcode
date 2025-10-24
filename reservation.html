@@ -326,22 +326,35 @@ async function genererTicketPDF(nom, sieges, email) {
   if (email) {
   const reader = new FileReader();
   reader.onload = async () => {
-    await emailjs.send("service_91fpmi6", "template_rh3vxgq", {
-      to_email: email,
-      to_name: nom,
-      message: "Voici votre ticket 🎭 en pièce jointe.",
-      attachment: reader.result, // contenu du PDF encodé
-    }, "2m3fNNkp36a2wCfZn")
-    .then(() => alert(`🎫 Ticket envoyé à ${email}`))
-    .catch(err => {
-      console.error(err);
-      alert("Erreur d’envoi du ticket : " + err.text);
-    });
+    const base64PDF = reader.result.split(",")[1]; // contenu PDF encodé
+
+    try {
+      const params = {
+        to_email: email,
+        to_name: nom,
+        message: "Voici votre ticket 🎭 en pièce jointe.",
+        my_pdf: base64PDF, // Nom reconnu comme pièce jointe
+      };
+
+      const response = await emailjs.send(
+        "TON_SERVICE_ID",      // exemple: service_3a7xabc
+        "TON_TEMPLATE_ID",     // exemple: template_7yzdef
+        params,
+        "TON_PUBLIC_KEY"       // exemple: Bx9xYz1AbcDEF
+      );
+
+      console.log("✅ EmailJS:", response);
+      alert(`🎫 Ticket envoyé à ${email}`);
+    } catch (error) {
+      console.error("❌ EmailJS erreur:", error);
+      alert("Erreur d’envoi : " + error.text);
+    }
   };
   reader.readAsDataURL(blob);
 } else {
   doc.save(`ticket_${nom}.pdf`);
 }
+
 
 document.getElementById("reserveBtn").onclick = () => {
   if (!selected.length) return alert("Aucun siège sélectionné !");
@@ -372,6 +385,7 @@ render();
 </script>
 </body>
 </html>
+
 
 
 
