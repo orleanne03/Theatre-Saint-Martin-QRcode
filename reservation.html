@@ -337,10 +337,10 @@ async function genererTicketPDF(nom, sieges, email) {
       };
 
       const response = await emailjs.send(
-        "TON_SERVICE_ID",      // exemple: service_3a7xabc
-        "TON_TEMPLATE_ID",     // exemple: template_7yzdef
+        "service_91fpmi6",      // exemple: service_3a7xabc
+        "template_rh3vxgq",     // exemple: template_7yzdef
         params,
-        "TON_PUBLIC_KEY"       // exemple: Bx9xYz1AbcDEF
+        "2m3fNNkp36a2wCfZn"       // exemple: Bx9xYz1AbcDEF
       );
 
       console.log("✅ EmailJS:", response);
@@ -385,6 +385,7 @@ render();
 </script>
 </body>
 </html>
+
 
 
 
