@@ -326,7 +326,7 @@ async function genererTicketPDF(nom, sieges, email) {
   if (email) {
   const reader = new FileReader();
   reader.onload = async () => {
-    await emailjs.send("TON_SERVICE_ID", "TON_TEMPLATE_ID", {
+    await emailjs.send("service_91fpmi6", "template_rh3vxgq", {
       to_email: email,
       to_name: nom,
       message: "Voici votre ticket 🎭 en pièce jointe.",
@@ -372,5 +372,6 @@ render();
 </script>
 </body>
 </html>
+
 
 
