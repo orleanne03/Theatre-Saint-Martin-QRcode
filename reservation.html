@@ -8,6 +8,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>
+emailjs.init("2m3fNNkp36a2wCfZn"); // ta clé publique ici
+console.log("✅ EmailJS initialisé");
+</script>
   <style>
   :root {
     --color-primary: #2563eb;
@@ -302,22 +306,27 @@ document.getElementById("cancelModal").onclick = closeModal;
 async function genererTicketPDF(nom, sieges, email) {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
-  const date = new Date().toLocaleDateString("fr-FR", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
+  const date = new Date().toLocaleDateString("fr-FR", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 
+  // ---- Création du ticket PDF
   const uid = `${nom}-${Date.now()}`;
   const qr = new QRious({ value: uid, size: 100 });
   const qrData = qr.toDataURL();
 
-  // --- contenu du ticket ---
   doc.setFont("helvetica", "bold");
   doc.setFontSize(20);
-  doc.text("🎭 Théâtre Saint Martin", 20, 25);
+  doc.text("Theatre Saint Martin", 20, 25);
   doc.setFontSize(12);
   doc.text(`Nom : ${nom}`, 20, 45);
   doc.text(`Date : ${date}`, 20, 55);
   doc.text("Sièges réservés :", 20, 70);
   let y = 80;
-  sieges.forEach(id => {
+  sieges.forEach((id) => {
     const [r, c] = id.split("-");
     doc.text(`→ Rangée ${r}, Siège ${c}`, 25, y);
     y += 8;
@@ -327,42 +336,50 @@ async function genererTicketPDF(nom, sieges, email) {
   doc.setDrawColor(37, 99, 235);
   doc.rect(10, 15, 190, y + 25, "S");
 
+  // ---- Conversion en blob
   const blob = doc.output("blob");
 
-  // --- Envoi EmailJS ---
   if (email) {
+    console.log("📨 Préparation de l’envoi du ticket à", email);
     const reader = new FileReader();
-    reader.onload = async () => {
-      const base64PDF = reader.result.split(",")[1]; // contenu du PDF encodé
 
+    reader.onload = async function () {
+      const base64PDF = reader.result.split(",")[1]; // contenu PDF encodé
       const params = {
         to_email: email,
         to_name: nom,
         message: "Voici votre ticket 🎭 en pièce jointe.",
-        my_pdf: base64PDF, // important : doit correspondre au champ dans le template
+        my_pdf: base64PDF,
       };
 
       try {
-        console.log("⏳ Envoi en cours vers", email);
-        const res = await emailjs.send(
-          "service_91fpmi6",      // ← ton Service ID exact
-          "template_xzjnnc2",     // ← ton Template ID exact
+        console.log("⏳ Envoi en cours via EmailJS…");
+        const response = await emailjs.send(
+          "service_91fpmi6", // ton vrai service ID
+          "template_xzjnnc2", // ton vrai template ID
           params,
-          "2m3fNNkp36a2wCfZn"    // ← ta clé publique
+          2m3fNNkp36a2wCfZn" // ta clé publique
         );
-        console.log("✅ Email envoyé :", res);
+        console.log("✅ Envoi réussi :", response);
         alert(`🎫 Ticket envoyé à ${email}`);
-      } catch (err) {
-        console.error("❌ Erreur EmailJS :", err);
-        alert("Erreur EmailJS : " + (err.text || err.message));
+      } catch (error) {
+        console.error("❌ Erreur EmailJS :", error);
+        alert("Erreur EmailJS : " + (error.text || error.message));
       }
     };
 
-    reader.readAsDataURL(blob); // encode le PDF avant envoi
+    reader.onerror = (e) => {
+      console.error("Erreur de lecture du PDF :", e);
+      alert("Erreur lors de la génération du ticket.");
+    };
+
+    reader.readAsDataURL(blob); // lance la lecture base64
   } else {
+    // Pas d’adresse email → téléchargement local
     doc.save(`ticket_${nom}.pdf`);
   }
 }
+
 
 
 
@@ -395,6 +412,7 @@ render();
 </script>
 </body>
 </html>
+
 
 
 
