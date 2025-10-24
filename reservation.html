@@ -331,7 +331,7 @@ async function genererTicketPDF(nom, sieges, email) {
       to_name: nom,
       message: "Voici votre ticket 🎭 en pièce jointe.",
       attachment: reader.result, // contenu du PDF encodé
-    }, "TON_PUBLIC_KEY")
+    }, "2m3fNNkp36a2wCfZn")
     .then(() => alert(`🎫 Ticket envoyé à ${email}`))
     .catch(err => {
       console.error(err);
@@ -372,6 +372,7 @@ render();
 </script>
 </body>
 </html>
+
 
 
 
