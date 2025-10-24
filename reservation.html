@@ -326,28 +326,28 @@ async function genererTicketPDF(nom, sieges, email) {
   if (email) {
   const reader = new FileReader();
   reader.onload = async () => {
-    const base64PDF = reader.result.split(",")[1]; // contenu PDF encodé
+    const base64PDF = reader.result.split(",")[1]; // PDF encodé en base64
+
+    const params = {
+      to_email: email,
+      to_name: nom,
+      message: "Voici votre ticket 🎭 en pièce jointe.",
+      my_pdf: base64PDF // Nom du champ important !
+    };
 
     try {
-      const params = {
-        to_email: email,
-        to_name: nom,
-        message: "Voici votre ticket 🎭 en pièce jointe.",
-        my_pdf: base64PDF, // Nom reconnu comme pièce jointe
-      };
-
-      const response = await emailjs.send(
-        "service_91fpmi6",      // exemple: service_3a7xabc
-        "template_rh3vxgq",     // exemple: template_7yzdef
+      const res = await emailjs.send(
+        "service_91fpmi6",
+        "ticket_theatre",   // le nom du template
         params,
-        "2m3fNNkp36a2wCfZn"       // exemple: Bx9xYz1AbcDEF
+        "2m3fNNkp36a2wCfZn"
       );
 
-      console.log("✅ EmailJS:", response);
+      console.log("✅ EmailJS envoyé :", res);
       alert(`🎫 Ticket envoyé à ${email}`);
-    } catch (error) {
-      console.error("❌ EmailJS erreur:", error);
-      alert("Erreur d’envoi : " + error.text);
+    } catch (err) {
+      console.error("❌ EmailJS erreur :", err);
+      alert("Erreur EmailJS : " + (err.text || err.message));
     }
   };
   reader.readAsDataURL(blob);
@@ -385,6 +385,7 @@ render();
 </script>
 </body>
 </html>
+
 
 
 
