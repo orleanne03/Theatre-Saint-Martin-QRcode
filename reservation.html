@@ -8,6 +8,149 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <style>
+  :root {
+    --color-primary: #2563eb;
+    --color-accent: #16a34a;
+    --color-danger: #ef4444;
+    --color-bg: #f8fafc;
+    --color-highlight: #facc15;
+  }
+
+  body {
+    font-family: "Poppins", sans-serif;
+    background: var(--color-bg);
+    color: #333;
+    text-align: center;
+    padding: 12px;
+    margin: 0;
+  }
+
+  h1 {
+    color: var(--color-primary);
+    margin-bottom: 10px;
+    font-size: clamp(1.2rem, 4vw, 1.8rem);
+  }
+
+  button {
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: clamp(0.9rem, 2.5vw, 1rem);
+    margin: 5px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    touch-action: manipulation;
+  }
+
+  button:hover { background: #1e40af; transform: scale(1.05); }
+
+  input[type="text"] {
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: clamp(0.9rem, 3vw, 1rem);
+    margin: 8px;
+    width: 80%;
+    max-width: 280px;
+  }
+
+  .salle {
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    gap: 6px;
+    margin: 15px auto;
+    overflow-x: auto;
+  }
+
+  .rangee-container { display: flex; align-items: center; gap: 6px; }
+  .numero-rangee { width: 20px; font-weight: 500; font-size: 0.8rem; color: #555; }
+  .rangee { display: grid; grid-template-columns: repeat(16, 1fr); gap: 4px; }
+
+  .siege {
+    width: 30px; height: 30px;
+    background: #d1d5db;
+    border-radius: 6px;
+    font-size: 0.65rem;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.25s ease;
+    user-select: none;
+  }
+
+  .siege.reserve { background: var(--color-danger); color: #fff; font-weight: 600; }
+  .siege.selected { background: var(--color-accent); color: #fff; }
+  .siege.highlight { background: var(--color-highlight) !important; color: #000 !important; border: 1px solid #facc15; box-shadow: 0 0 8px #facc15; }
+  .siege.dimmed { opacity: 0.2; filter: grayscale(90%); }
+  .siege:hover { transform: scale(1.2); background: #93c5fd; }
+
+  .scene {
+    background: linear-gradient(to top, #e5e7eb, #d1d5db);
+    border: 2px solid #9ca3af;
+    border-radius: 8px;
+    width: 90%; max-width: 700px;
+    margin: 20px auto 10px;
+    padding: 10px;
+    font-weight: 600;
+    font-size: clamp(1rem, 3vw, 1.2rem);
+    color: #374151;
+    box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.2);
+  }
+
+  .legend {
+    display: flex; flex-wrap: wrap; justify-content: center;
+    gap: 12px; font-size: 0.85rem; margin-top: 10px;
+  }
+
+  .box { width: 16px; height: 16px; border-radius: 4px; display: inline-block; margin-right: 4px; }
+  .box.dispo { background: #d1d5db; }
+  .box.reserve { background: var(--color-danger); }
+  .box.selected { background: var(--color-accent); }
+
+  table {
+    margin: 20px auto;
+    border-collapse: collapse;
+    width: 95%;
+    font-size: 0.85rem;
+  }
+
+  th, td { border: 1px solid #ccc; padding: 6px; }
+  th { background: var(--color-primary); color: white; }
+
+  footer { margin-top: 30px; font-size: 0.8rem; color: #777; }
+
+  .modal-bg {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.4);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+
+  .modal {
+    background: white; padding: 20px; border-radius: 12px;
+    width: 85%; max-width: 320px; text-align: left;
+  }
+
+  .modal h3 { margin-bottom: 10px; font-size: 1rem; }
+  .modal input { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc; margin-top: 8px; margin-bottom: 15px; }
+
+  .modal-buttons { display: flex; justify-content: space-between; }
+  .btn-cancel { background: #9ca3af; }
+  .btn-cancel:hover { background: #6b7280; }
+
+  @media (max-width: 600px) {
+    .rangee { grid-template-columns: repeat(8, 1fr); }
+    .siege { width: 34px; height: 34px; font-size: 0.7rem; }
+  }
+
+  @media print {
+    button, .legend, .panel, table, footer, .modal-bg, #searchInput { display: none !important; }
+  }
+</style>
 </head>
 <body>
 
@@ -223,3 +366,4 @@ render();
 </script>
 </body>
 </html>
+
