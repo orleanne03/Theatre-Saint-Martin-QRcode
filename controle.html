@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contrôle des billets – Théâtre Saint Martin</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+<body>
+
+<h1>📷 Contrôle des billets</h1>
+
+<div id="scannerContainer" style="text-align:center;">
+  <div id="reader" style="width:280px; margin:auto;"></div>
+</div>
+
+<div id="result" style="margin-top:20px; font-size:18px; font-weight:600;"></div>
+
+<button class="btn" onclick="window.location='index.html'">⬅️ Retour à l'accueil</button>
+
+<script>
+const scanner = new Html5Qrcode("reader");
+
+scanner.start(
+  { facingMode: "environment" },
+  { fps: 10, qrbox: 200 },
+  message => {
+    scanner.stop();
+    verifierTicket(message);
+  },
+  () => {}
+).catch(err => alert("Erreur caméra : " + err));
+
+function verifierTicket(code) {
+  let reservations = JSON.parse(localStorage.getItem("reservations") || "{}");
+  let valide = false;
+
+  Object.entries(reservations).forEach(([key, value]) => {
+    if (code.includes(value)) valide = true;
+  });
+
+  const result = document.getElementById("result");
+  if (valide) {
+    result.innerHTML = "✅ Billet valide ! Bienvenue 🎭";
+    result.style.color = "green";
+  } else {
+    result.innerHTML = "❌ Billet invalide ou inconnu.";
+    result.style.color = "red";
+  }
+
+  setTimeout(() => {
+    result.innerHTML = "";
+    scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 200 }, msg => {
+      scanner.stop(); verifierTicket(msg);
+    });
+  }, 3000);
+}
+</script>
+
+</body>
+</html>

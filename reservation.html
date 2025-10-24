@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Réservation – Théâtre Saint Martin</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+</head>
+<body>
+
+<h1>🎭 Réservation – Théâtre Saint Martin</h1>
+<input type="text" id="searchInput" placeholder="🔍 Rechercher un nom...">
+
+<div class="salle" id="salle"></div>
+<div class="scene">🎭 SCÈNE</div>
+
+<div class="legend">
+  <div><span class="box dispo"></span>Disponible</div>
+  <div><span class="box selected"></span>Sélectionné</div>
+  <div><span class="box reserve"></span>Réservé</div>
+</div>
+
+<div class="panel">
+  <button id="reserveBtn">Réserver</button>
+  <button id="resetBtn">Réinitialiser</button>
+  <button id="exportBtn">Exporter CSV</button>
+  <button id="printBtn">🖨️ Imprimer / PDF</button>
+  <button onclick="window.location='index.html'">⬅️ Accueil</button>
+</div>
+
+<h3>📋 Liste des réservations</h3>
+<table id="tableResa">
+  <thead><tr><th>Rangée</th><th>Siège</th><th>Nom</th></tr></thead>
+  <tbody></tbody>
+</table>
+
+<footer>💙 Théâtre Saint Martin – Version complète</footer>
+
+<!-- Fenêtre modale -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <h3>Nouvelle réservation</h3>
+    <p id="modalText"></p>
+    <input type="text" id="nomInput" placeholder="Nom du réservant">
+    <input type="email" id="emailInput" placeholder="Adresse e-mail (optionnelle)">
+    <div class="modal-buttons">
+      <button id="cancelModal" class="btn-cancel">Annuler</button>
+      <button id="confirmModal">Confirmer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+emailjs.init("2m3fNNkp36a2wCfZn"); // 🔑 ton identifiant EmailJS
+
+const nbRangees = 20, nbParRangee = 16, adminPassword = "admin123";
+let selected = [], reservations = JSON.parse(localStorage.getItem("reservations") || "{}");
+
+const salle = document.getElementById("salle"),
+      tableBody = document.querySelector("#tableResa tbody"),
+      modalBg = document.getElementById("modalBg"),
+      nomInput = document.getElementById("nomInput"),
+      modalText = document.getElementById("modalText"),
+      searchInput = document.getElementById("searchInput");
+let confirmAction = null;
+
+function save() { localStorage.setItem("reservations", JSON.stringify(reservations)); }
+
+function render() {
+  salle.innerHTML = "";
+  for (let r = 1; r <= nbRangees; r++) {
+    const rc = document.createElement("div");
+    rc.classList.add("rangee-container");
+    const num = document.createElement("div");
+    num.classList.add("numero-rangee");
+    num.textContent = r;
+    rc.appendChild(num);
+    const row = document.createElement("div");
+    row.classList.add("rangee");
+
+    for (let c = 1; c <= nbParRangee; c++) {
+      const id = `${r}-${c}`;
+      const seat = document.createElement("div");
+      seat.classList.add("siege");
+      if (reservations[id]) {
+        seat.classList.add("reserve");
+        seat.textContent = reservations[id].substring(0, 3);
+      } else seat.textContent = c;
+      if (selected.includes(id)) seat.classList.add("selected");
+      seat.onclick = () => {
+        if (reservations[id]) {
+          const pwd = prompt(`Réservé par ${reservations[id]}. Mot de passe admin ?`);
+          if (pwd === adminPassword) { delete reservations[id]; save(); render(); }
+        } else {
+          selected = selected.includes(id) ? selected.filter(s => s !== id) : [...selected, id];
+          render();
+        }
+      };
+      row.appendChild(seat);
+    }
+    rc.appendChild(row); salle.appendChild(rc);
+  }
+  updateTable(); applySearch();
+}
+
+function updateTable() {
+  tableBody.innerHTML = "";
+  Object.entries(reservations).forEach(([key, name]) => {
+    const [r, c] = key.split("-");
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${r}</td><td>${c}</td><td>${name}</td>`;
+    tableBody.appendChild(tr);
+  });
+}
+
+function applySearch() {
+  const q = searchInput.value.trim().toLowerCase();
+  const seats = document.querySelectorAll(".siege");
+  const rows = tableBody.querySelectorAll("tr");
+  seats.forEach(s => s.classList.remove("dimmed", "highlight"));
+  rows.forEach(r => (r.style.display = ""));
+  if (q) {
+    seats.forEach(seat => {
+      const rangee = seat.parentElement.parentElement.querySelector(".numero-rangee").textContent;
+      const id = `${rangee}-${seat.textContent}`;
+      const name = reservations[id];
+      if (name && name.toLowerCase().includes(q)) seat.classList.add("highlight");
+      else seat.classList.add("dimmed");
+    });
+    rows.forEach(row => {
+      const name = row.cells[2].textContent.toLowerCase();
+      if (!name.includes(q)) row.style.display = "none";
+    });
+  }
+}
+searchInput.oninput = applySearch;
+
+function openModal(msg, onConfirm) {
+  modalText.textContent = msg;
+  modalBg.style.display = "flex";
+  nomInput.value = ""; document.getElementById("emailInput").value = "";
+  confirmAction = onConfirm;
+}
+function closeModal() { modalBg.style.display = "none"; confirmAction = null; }
+
+document.getElementById("confirmModal").onclick = async () => {
+  const nom = nomInput.value.trim();
+  const email = document.getElementById("emailInput").value.trim();
+  if (!nom) return alert("Veuillez entrer un nom.");
+  if (confirmAction) await confirmAction(nom, email);
+  closeModal();
+};
+document.getElementById("cancelModal").onclick = closeModal;
+
+// --- Génération du ticket + envoi e-mail ---
+async function genererTicketPDF(nom, sieges, email) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const date = new Date().toLocaleDateString("fr-FR", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
+
+  const uid = `${nom}-${Date.now()}`;
+  const qr = new QRious({ value: uid, size: 100 });
+  const qrData = qr.toDataURL();
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(20);
+  doc.text("🎭 Théâtre Saint Martin", 20, 25);
+  doc.setFontSize(12);
+  doc.text(`Nom : ${nom}`, 20, 45);
+  doc.text(`Date : ${date}`, 20, 55);
+  doc.text("Sièges réservés :", 20, 70);
+  let y = 80;
+  sieges.forEach(id => { const [r,c]=id.split("-"); doc.text(`→ Rangée ${r}, Siège ${c}`,25,y); y+=8; });
+  doc.addImage(qrData, "PNG", 140, 35, 45, 45);
+  doc.setFont("helvetica","italic");
+  doc.text("Merci pour votre réservation et bon spectacle !", 20, y+15);
+  doc.setDrawColor(37,99,235); doc.rect(10,15,190,y+25,"S");
+
+  const blob = doc.output("blob");
+  if (email) {
+    const form = new FormData();
+    form.append("service_id","service_91fpmi6");
+    form.append("template_id","template_rh3vxgq");
+    form.append("user_id","2m3fNNkp36a2wCfZn");
+    form.append("to_email", email);
+    form.append("to_name", nom);
+    const file = new File([blob], `ticket_${nom}.pdf`, { type: "application/pdf" });
+    form.append("attachment", file);
+    await fetch("https://api.emailjs.com/api/v1.0/email/send-form", { method:"POST", body: form });
+    alert(`🎫 Ticket envoyé à ${email}`);
+  } else doc.save(`ticket_${nom}.pdf`);
+}
+
+document.getElementById("reserveBtn").onclick = () => {
+  if (!selected.length) return alert("Aucun siège sélectionné !");
+  openModal(`Réserver ${selected.length} siège(s) pour :`, async (nom, email) => {
+    selected.forEach(id => (reservations[id] = nom));
+    await genererTicketPDF(nom, selected, email);
+    selected = []; save(); render();
+  });
+};
+
+document.getElementById("resetBtn").onclick = () => {
+  const pwd = prompt("Mot de passe admin pour tout réinitialiser :");
+  if (pwd === adminPassword && confirm("Tout supprimer ?")) {
+    reservations = {}; save(); render();
+  }
+};
+
+document.getElementById("exportBtn").onclick = () => {
+  const rows = [["Rangée","Siège","Nom"], ...Object.entries(reservations).map(([id,nom]) => [...id.split("-"),nom])];
+  const csv = rows.map(r=>r.join(",")).join("\n");
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
+  a.download="reservations.csv"; a.click();
+};
+document.getElementById("printBtn").onclick = () => window.print();
+
+render();
+</script>
+</body>
+</html>

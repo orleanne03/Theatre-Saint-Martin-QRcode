@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<title>Théâtre Saint Martin</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="accueil">
+
+<div class="accueil-container">
+  <div class="logo">🎭</div>
+  <h1>Théâtre Saint Martin</h1>
+
+  <div style="display:flex; flex-direction:column; gap:15px;">
+    <button class="btn" onclick="window.location='reservation.html'">🎟️ Mode Réservation</button>
+    <button class="btn" onclick="window.location='controle.html'">📷 Mode Contrôle des billets</button>
+  </div>
+</div>
+
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js')
+    .then(() => console.log('✅ SW actif'))
+    .catch(err => console.error('❌ Erreur SW', err));
+}
+</script>
+</body>
+</html>

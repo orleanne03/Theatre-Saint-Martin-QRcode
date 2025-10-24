@@ -1,0 +1,60 @@
+:root {
+  --color-primary: #2563eb;
+  --color-bg: #f8fafc;
+  --color-text: #333;
+}
+
+/* === Styles de l’écran d’accueil === */
+body.accueil {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: "Poppins", sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+.accueil-container {
+  text-align: center;
+  animation: fadeIn 1.5s ease;
+}
+
+.logo {
+  font-size: 80px;
+  margin-bottom: 15px;
+  animation: float 3s ease-in-out infinite;
+}
+
+h1 {
+  font-size: 1.8rem;
+  color: var(--color-primary);
+  margin-bottom: 25px;
+}
+
+.btn {
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 24px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn:hover {
+  background: #1e40af;
+  transform: scale(1.05);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
