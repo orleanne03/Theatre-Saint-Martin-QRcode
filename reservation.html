@@ -198,7 +198,7 @@
 
 <script>
 emailjs.init("2m3fNNkp36a2wCfZn"); // 🔑 ton identifiant EmailJS
-
+console.log("✅ EmailJS initialisé");
 const nbRangees = 20, nbParRangee = 16, adminPassword = "admin123";
 let selected = [], reservations = JSON.parse(localStorage.getItem("reservations") || "{}");
 
@@ -308,6 +308,7 @@ async function genererTicketPDF(nom, sieges, email) {
   const qr = new QRious({ value: uid, size: 100 });
   const qrData = qr.toDataURL();
 
+  // --- contenu du ticket ---
   doc.setFont("helvetica", "bold");
   doc.setFontSize(20);
   doc.text("🎭 Théâtre Saint Martin", 20, 25);
@@ -316,44 +317,53 @@ async function genererTicketPDF(nom, sieges, email) {
   doc.text(`Date : ${date}`, 20, 55);
   doc.text("Sièges réservés :", 20, 70);
   let y = 80;
-  sieges.forEach(id => { const [r,c]=id.split("-"); doc.text(`→ Rangée ${r}, Siège ${c}`,25,y); y+=8; });
+  sieges.forEach(id => {
+    const [r, c] = id.split("-");
+    doc.text(`→ Rangée ${r}, Siège ${c}`, 25, y);
+    y += 8;
+  });
   doc.addImage(qrData, "PNG", 140, 35, 45, 45);
-  doc.setFont("helvetica","italic");
-  doc.text("Merci pour votre réservation et bon spectacle !", 20, y+15);
-  doc.setDrawColor(37,99,235); doc.rect(10,15,190,y+25,"S");
+  doc.text("Merci pour votre réservation et bon spectacle !", 20, y + 15);
+  doc.setDrawColor(37, 99, 235);
+  doc.rect(10, 15, 190, y + 25, "S");
 
   const blob = doc.output("blob");
-  if (email) {
-  const reader = new FileReader();
-  reader.onload = async () => {
-    const base64PDF = reader.result.split(",")[1]; // PDF encodé en base64
 
-    const params = {
-      to_email: email,
-      to_name: nom,
-      message: "Voici votre ticket 🎭 en pièce jointe.",
-      my_pdf: base64PDF // Nom du champ important !
+  // --- Envoi EmailJS ---
+  if (email) {
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const base64PDF = reader.result.split(",")[1]; // contenu du PDF encodé
+
+      const params = {
+        to_email: email,
+        to_name: nom,
+        message: "Voici votre ticket 🎭 en pièce jointe.",
+        my_pdf: base64PDF, // important : doit correspondre au champ dans le template
+      };
+
+      try {
+        console.log("⏳ Envoi en cours vers", email);
+        const res = await emailjs.send(
+          "service_91fpmi6",      // ← ton Service ID exact
+          "template_xzjnnc2",     // ← ton Template ID exact
+          params,
+          "2m3fNNkp36a2wCfZn"    // ← ta clé publique
+        );
+        console.log("✅ Email envoyé :", res);
+        alert(`🎫 Ticket envoyé à ${email}`);
+      } catch (err) {
+        console.error("❌ Erreur EmailJS :", err);
+        alert("Erreur EmailJS : " + (err.text || err.message));
+      }
     };
 
-    try {
-      const res = await emailjs.send(
-        "service_91fpmi6",
-        "template_xzjnnc2",   // le nom du template
-        params,
-        "2m3fNNkp36a2wCfZn"
-      );
-
-      console.log("✅ EmailJS envoyé :", res);
-      alert(`🎫 Ticket envoyé à ${email}`);
-    } catch (err) {
-      console.error("❌ EmailJS erreur :", err);
-      alert("Erreur EmailJS : " + (err.text || err.message));
-    }
-  };
-  reader.readAsDataURL(blob);
-} else {
-  doc.save(`ticket_${nom}.pdf`);
+    reader.readAsDataURL(blob); // encode le PDF avant envoi
+  } else {
+    doc.save(`ticket_${nom}.pdf`);
+  }
 }
+
 
 
 document.getElementById("reserveBtn").onclick = () => {
@@ -385,6 +395,7 @@ render();
 </script>
 </body>
 </html>
+
 
 
 
