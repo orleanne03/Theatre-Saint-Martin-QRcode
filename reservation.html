@@ -324,17 +324,23 @@ async function genererTicketPDF(nom, sieges, email) {
 
   const blob = doc.output("blob");
   if (email) {
-    const form = new FormData();
-    form.append("service_id","service_91fpmi6");
-    form.append("template_id","template_rh3vxgq");
-    form.append("user_id","2m3fNNkp36a2wCfZn");
-    form.append("to_email", email);
-    form.append("to_name", nom);
-    const file = new File([blob], `ticket_${nom}.pdf`, { type: "application/pdf" });
-    form.append("attachment", file);
-    await fetch("https://api.emailjs.com/api/v1.0/email/send-form", { method:"POST", body: form });
-    alert(`🎫 Ticket envoyé à ${email}`);
-  } else doc.save(`ticket_${nom}.pdf`);
+  const reader = new FileReader();
+  reader.onload = async () => {
+    await emailjs.send("TON_SERVICE_ID", "TON_TEMPLATE_ID", {
+      to_email: email,
+      to_name: nom,
+      message: "Voici votre ticket 🎭 en pièce jointe.",
+      attachment: reader.result, // contenu du PDF encodé
+    }, "TON_PUBLIC_KEY")
+    .then(() => alert(`🎫 Ticket envoyé à ${email}`))
+    .catch(err => {
+      console.error(err);
+      alert("Erreur d’envoi du ticket : " + err.text);
+    });
+  };
+  reader.readAsDataURL(blob);
+} else {
+  doc.save(`ticket_${nom}.pdf`);
 }
 
 document.getElementById("reserveBtn").onclick = () => {
@@ -366,4 +372,5 @@ render();
 </script>
 </body>
 </html>
+
 
