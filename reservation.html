@@ -20,28 +20,52 @@
       background: #2563eb;
       color: white;
       padding: 10px;
-      width: 60%;
+      width: 80%;
       margin: 20px auto;
       border-radius: 8px;
     }
+    .row-label {
+      grid-column: span 18;
+      text-align: left;
+      margin: 6px 0;
+      font-weight: bold;
+      color: #333;
+    }
     .seating {
       display: grid;
-      grid-template-columns: repeat(10, 1fr);
-      gap: 5px;
+      grid-template-columns: repeat(18, 1fr); /* 16 sièges + 2 strapontins */
+      gap: 4px;
       justify-content: center;
       margin: 0 auto;
       width: fit-content;
     }
     .seat {
-      width: 30px;
-      height: 30px;
+      width: 28px;
+      height: 28px;
       border-radius: 4px;
       border: 1px solid #ccc;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      background: white;
+      user-select: none;
     }
     .seat.selected {
       background: #2563eb;
       border-color: #2563eb;
+      color: white;
+    }
+    .seat.strapontin {
+      background: #e5e7eb;
+      border-color: #bbb;
+      font-size: 9px;
+    }
+    .seat.strapontin.selected {
+      background: #60a5fa;
+      border-color: #2563eb;
+      color: white;
     }
     form { margin-top: 20px; }
     input {
@@ -60,7 +84,6 @@
     }
     button:hover { background: #1e4fd8; }
 
-    /* Confirmation */
     #confirmation {
       display: none;
       margin-top: 25px;
@@ -90,24 +113,51 @@
 
   <script>
     // === Initialisation EmailJS ===
-    emailjs.init("2m3fNNkp36a2wCfZn"); // ex: B3xyzA4pPQ12Z
+    emailjs.init("TON_PUBLIC_KEY"); // ex: B3xyzA4pPQ12Z
 
-    // === Création des sièges ===
-    const nbRows = 5;
-    const nbSeatsPerRow = 10;
+    // === Définition du plan de salle ===
+    const seatOrder = [15,13,11,9,7,5,3,1,2,4,6,8,10,12,14,16];
+    const letters = "ABCDEFGHIJKLMNOPQRS".split(""); // 19 rangées
     const seating = document.getElementById("seating");
 
-    for (let r = 1; r <= nbRows; r++) {
-      for (let c = 1; c <= nbSeatsPerRow; c++) {
+    // Création des rangées (S en haut → A en bas)
+    for (let r = letters.length - 1; r >= 0; r--) {
+      const rowLetter = letters[r];
+
+      // Étiquette de rangée
+      const label = document.createElement("div");
+      label.classList.add("row-label");
+      label.textContent = "Rangée " + rowLetter;
+      seating.appendChild(label);
+
+      // Strapontin gauche
+      const left = document.createElement("div");
+      left.classList.add("seat", "strapontin");
+      left.textContent = "SG";
+      left.dataset.id = `${rowLetter}-SG`;
+      left.onclick = () => left.classList.toggle("selected");
+      seating.appendChild(left);
+
+      // Sièges numérotés
+      seatOrder.forEach(num => {
         const seat = document.createElement("div");
         seat.classList.add("seat");
-        seat.dataset.id = `R${r}-S${c}`;
+        seat.dataset.id = `${rowLetter}${num}`;
+        seat.textContent = num;
         seat.onclick = () => seat.classList.toggle("selected");
         seating.appendChild(seat);
-      }
+      });
+
+      // Strapontin droit
+      const right = document.createElement("div");
+      right.classList.add("seat", "strapontin");
+      right.textContent = "SD";
+      right.dataset.id = `${rowLetter}-SD`;
+      right.onclick = () => right.classList.toggle("selected");
+      seating.appendChild(right);
     }
 
-    // === Fonction d’envoi du ticket par e-mail ===
+    // === Envoi du ticket par e-mail ===
     async function genererTicketEmail(nom, sieges, email) {
       const date = new Date().toLocaleDateString("fr-FR", {
         weekday: "long",
@@ -122,7 +172,7 @@
           <h2 style="color:#2563eb;">Théâtre Saint Martin</h2>
           <p><strong>Nom :</strong> ${nom}</p>
           <p><strong>Date :</strong> ${date}</p>
-          <p><strong>Sièges réservés :</strong> ${sieges.join(", ")}</p>
+          <p><strong>Places réservées :</strong> ${sieges.join(", ")}</p>
           <p>Merci pour votre réservation et bon spectacle.</p>
         </div>
       `;
@@ -135,14 +185,13 @@
 
       try {
         const res = await emailjs.send(
-          "service_91fpmi6",   // ex: service_123abc
-          "template_xzjnnc2",  // ex: template_456xyz
+          "TON_SERVICE_ID",
+          "TON_TEMPLATE_ID",
           params,
-          "2m3fNNkp36a2wCfZn"
+          "TON_PUBLIC_KEY"
         );
         console.log("Email envoyé :", res);
 
-        // --- Affiche confirmation visuelle ---
         const confirmation = document.getElementById("confirmation");
         confirmation.innerHTML = `
           <h3>Réservation confirmée</h3>
@@ -174,4 +223,3 @@
   </script>
 </body>
 </html>
-
