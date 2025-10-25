@@ -90,7 +90,7 @@
 
   <script>
     // === Initialisation EmailJS ===
-    emailjs.init("TON_PUBLIC_KEY"); // ex: B3xyzA4pPQ12Z
+    emailjs.init("2m3fNNkp36a2wCfZn"); // ex: B3xyzA4pPQ12Z
 
     // === Création des sièges ===
     const nbRows = 5;
@@ -135,10 +135,10 @@
 
       try {
         const res = await emailjs.send(
-          "TON_SERVICE_ID",   // ex: service_123abc
-          "TON_TEMPLATE_ID",  // ex: template_456xyz
+          "service_91fpmi6",   // ex: service_123abc
+          "template_xzjnnc2",  // ex: template_456xyz
           params,
-          "TON_PUBLIC_KEY"
+          "2m3fNNkp36a2wCfZn"
         );
         console.log("Email envoyé :", res);
 
@@ -174,3 +174,4 @@
   </script>
 </body>
 </html>
+
