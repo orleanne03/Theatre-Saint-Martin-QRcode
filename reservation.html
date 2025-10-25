@@ -1,425 +1,176 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Réservation – Théâtre Saint Martin</title>
-<link rel="stylesheet" href="style.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script>
-emailjs.init("2m3fNNkp36a2wCfZn"); // ta clé publique ici
-console.log("✅ EmailJS initialisé");
-</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Théâtre Saint Martin - Réservations</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
   <style>
-  :root {
-    --color-primary: #2563eb;
-    --color-accent: #16a34a;
-    --color-danger: #ef4444;
-    --color-bg: #f8fafc;
-    --color-highlight: #facc15;
-  }
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 { color: #2563eb; }
+    .scene {
+      background: #2563eb;
+      color: white;
+      padding: 10px;
+      width: 60%;
+      margin: 20px auto;
+      border-radius: 8px;
+    }
+    .seating {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 5px;
+      justify-content: center;
+      margin: 0 auto;
+      width: fit-content;
+    }
+    .seat {
+      width: 30px;
+      height: 30px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      cursor: pointer;
+    }
+    .seat.selected {
+      background: #2563eb;
+      border-color: #2563eb;
+    }
+    form { margin-top: 20px; }
+    input {
+      padding: 8px;
+      margin: 5px;
+      font-size: 16px;
+    }
+    button {
+      background: #2563eb;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover { background: #1e4fd8; }
 
-  body {
-    font-family: "Poppins", sans-serif;
-    background: var(--color-bg);
-    color: #333;
-    text-align: center;
-    padding: 12px;
-    margin: 0;
-  }
-
-  h1 {
-    color: var(--color-primary);
-    margin-bottom: 10px;
-    font-size: clamp(1.2rem, 4vw, 1.8rem);
-  }
-
-  button {
-    background: var(--color-primary);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 10px 14px;
-    font-size: clamp(0.9rem, 2.5vw, 1rem);
-    margin: 5px;
-    cursor: pointer;
-    transition: all 0.25s ease;
-    touch-action: manipulation;
-  }
-
-  button:hover { background: #1e40af; transform: scale(1.05); }
-
-  input[type="text"] {
-    padding: 10px 12px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    font-size: clamp(0.9rem, 3vw, 1rem);
-    margin: 8px;
-    width: 80%;
-    max-width: 280px;
-  }
-
-  .salle {
-    display: flex;
-    flex-direction: column-reverse;
-    align-items: center;
-    gap: 6px;
-    margin: 15px auto;
-    overflow-x: auto;
-  }
-
-  .rangee-container { display: flex; align-items: center; gap: 6px; }
-  .numero-rangee { width: 20px; font-weight: 500; font-size: 0.8rem; color: #555; }
-  .rangee { display: grid; grid-template-columns: repeat(16, 1fr); gap: 4px; }
-
-  .siege {
-    width: 30px; height: 30px;
-    background: #d1d5db;
-    border-radius: 6px;
-    font-size: 0.65rem;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; transition: all 0.25s ease;
-    user-select: none;
-  }
-
-  .siege.reserve { background: var(--color-danger); color: #fff; font-weight: 600; }
-  .siege.selected { background: var(--color-accent); color: #fff; }
-  .siege.highlight { background: var(--color-highlight) !important; color: #000 !important; border: 1px solid #facc15; box-shadow: 0 0 8px #facc15; }
-  .siege.dimmed { opacity: 0.2; filter: grayscale(90%); }
-  .siege:hover { transform: scale(1.2); background: #93c5fd; }
-
-  .scene {
-    background: linear-gradient(to top, #e5e7eb, #d1d5db);
-    border: 2px solid #9ca3af;
-    border-radius: 8px;
-    width: 90%; max-width: 700px;
-    margin: 20px auto 10px;
-    padding: 10px;
-    font-weight: 600;
-    font-size: clamp(1rem, 3vw, 1.2rem);
-    color: #374151;
-    box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.2);
-  }
-
-  .legend {
-    display: flex; flex-wrap: wrap; justify-content: center;
-    gap: 12px; font-size: 0.85rem; margin-top: 10px;
-  }
-
-  .box { width: 16px; height: 16px; border-radius: 4px; display: inline-block; margin-right: 4px; }
-  .box.dispo { background: #d1d5db; }
-  .box.reserve { background: var(--color-danger); }
-  .box.selected { background: var(--color-accent); }
-
-  table {
-    margin: 20px auto;
-    border-collapse: collapse;
-    width: 95%;
-    font-size: 0.85rem;
-  }
-
-  th, td { border: 1px solid #ccc; padding: 6px; }
-  th { background: var(--color-primary); color: white; }
-
-  footer { margin-top: 30px; font-size: 0.8rem; color: #777; }
-
-  .modal-bg {
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.4);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 100;
-  }
-
-  .modal {
-    background: white; padding: 20px; border-radius: 12px;
-    width: 85%; max-width: 320px; text-align: left;
-  }
-
-  .modal h3 { margin-bottom: 10px; font-size: 1rem; }
-  .modal input { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc; margin-top: 8px; margin-bottom: 15px; }
-
-  .modal-buttons { display: flex; justify-content: space-between; }
-  .btn-cancel { background: #9ca3af; }
-  .btn-cancel:hover { background: #6b7280; }
-
-  @media (max-width: 600px) {
-    .rangee { grid-template-columns: repeat(8, 1fr); }
-    .siege { width: 34px; height: 34px; font-size: 0.7rem; }
-  }
-
-  @media print {
-    button, .legend, .panel, table, footer, .modal-bg, #searchInput { display: none !important; }
-  }
-</style>
+    /* Confirmation */
+    #confirmation {
+      display: none;
+      margin-top: 25px;
+      padding: 15px;
+      border-radius: 8px;
+      background: #e0f2fe;
+      color: #1e3a8a;
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+  </style>
 </head>
 <body>
+  <h1>Théâtre Saint Martin</h1>
 
-<h1>🎭 Réservation – Théâtre Saint Martin</h1>
-<input type="text" id="searchInput" placeholder="🔍 Rechercher un nom...">
+  <div class="scene">SCÈNE</div>
+  <div class="seating" id="seating"></div>
 
-<div class="salle" id="salle"></div>
-<div class="scene">🎭 SCÈNE</div>
+  <form id="formReservation">
+    <input id="nomClient" type="text" placeholder="Nom complet" required>
+    <input id="emailClient" type="email" placeholder="Adresse e-mail" required>
+    <button type="button" id="boutonReserver">Réserver</button>
+  </form>
 
-<div class="legend">
-  <div><span class="box dispo"></span>Disponible</div>
-  <div><span class="box selected"></span>Sélectionné</div>
-  <div><span class="box reserve"></span>Réservé</div>
-</div>
+  <div id="confirmation"></div>
 
-<div class="panel">
-  <button id="reserveBtn">Réserver</button>
-  <button id="resetBtn">Réinitialiser</button>
-  <button id="exportBtn">Exporter CSV</button>
-  <button id="printBtn">🖨️ Imprimer / PDF</button>
-  <button onclick="window.location='index.html'">⬅️ Accueil</button>
-</div>
+  <script>
+    // === Initialisation EmailJS ===
+    emailjs.init("TON_PUBLIC_KEY"); // ex: B3xyzA4pPQ12Z
 
-<h3>📋 Liste des réservations</h3>
-<table id="tableResa">
-  <thead><tr><th>Rangée</th><th>Siège</th><th>Nom</th></tr></thead>
-  <tbody></tbody>
-</table>
+    // === Création des sièges ===
+    const nbRows = 5;
+    const nbSeatsPerRow = 10;
+    const seating = document.getElementById("seating");
 
-<footer>💙 Théâtre Saint Martin – Version complète</footer>
-
-<!-- Fenêtre modale -->
-<div class="modal-bg" id="modalBg">
-  <div class="modal">
-    <h3>Nouvelle réservation</h3>
-    <p id="modalText"></p>
-    <input type="text" id="nomInput" placeholder="Nom du réservant">
-    <input type="email" id="emailInput" placeholder="Adresse e-mail (optionnelle)">
-    <div class="modal-buttons">
-      <button id="cancelModal" class="btn-cancel">Annuler</button>
-      <button id="confirmModal">Confirmer</button>
-    </div>
-  </div>
-</div>
-
-<script>
-emailjs.init("2m3fNNkp36a2wCfZn"); // 🔑 ton identifiant EmailJS
-console.log("✅ EmailJS initialisé");
-const nbRangees = 20, nbParRangee = 16, adminPassword = "admin123";
-let selected = [], reservations = JSON.parse(localStorage.getItem("reservations") || "{}");
-
-const salle = document.getElementById("salle"),
-      tableBody = document.querySelector("#tableResa tbody"),
-      modalBg = document.getElementById("modalBg"),
-      nomInput = document.getElementById("nomInput"),
-      modalText = document.getElementById("modalText"),
-      searchInput = document.getElementById("searchInput");
-let confirmAction = null;
-
-function save() { localStorage.setItem("reservations", JSON.stringify(reservations)); }
-
-function render() {
-  salle.innerHTML = "";
-  for (let r = 1; r <= nbRangees; r++) {
-    const rc = document.createElement("div");
-    rc.classList.add("rangee-container");
-    const num = document.createElement("div");
-    num.classList.add("numero-rangee");
-    num.textContent = r;
-    rc.appendChild(num);
-    const row = document.createElement("div");
-    row.classList.add("rangee");
-
-    for (let c = 1; c <= nbParRangee; c++) {
-      const id = `${r}-${c}`;
-      const seat = document.createElement("div");
-      seat.classList.add("siege");
-      if (reservations[id]) {
-        seat.classList.add("reserve");
-        seat.textContent = reservations[id].substring(0, 3);
-      } else seat.textContent = c;
-      if (selected.includes(id)) seat.classList.add("selected");
-      seat.onclick = () => {
-        if (reservations[id]) {
-          const pwd = prompt(`Réservé par ${reservations[id]}. Mot de passe admin ?`);
-          if (pwd === adminPassword) { delete reservations[id]; save(); render(); }
-        } else {
-          selected = selected.includes(id) ? selected.filter(s => s !== id) : [...selected, id];
-          render();
-        }
-      };
-      row.appendChild(seat);
+    for (let r = 1; r <= nbRows; r++) {
+      for (let c = 1; c <= nbSeatsPerRow; c++) {
+        const seat = document.createElement("div");
+        seat.classList.add("seat");
+        seat.dataset.id = `R${r}-S${c}`;
+        seat.onclick = () => seat.classList.toggle("selected");
+        seating.appendChild(seat);
+      }
     }
-    rc.appendChild(row); salle.appendChild(rc);
-  }
-  updateTable(); applySearch();
-}
 
-function updateTable() {
-  tableBody.innerHTML = "";
-  Object.entries(reservations).forEach(([key, name]) => {
-    const [r, c] = key.split("-");
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${r}</td><td>${c}</td><td>${name}</td>`;
-    tableBody.appendChild(tr);
-  });
-}
+    // === Fonction d’envoi du ticket par e-mail ===
+    async function genererTicketEmail(nom, sieges, email) {
+      const date = new Date().toLocaleDateString("fr-FR", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
 
-function applySearch() {
-  const q = searchInput.value.trim().toLowerCase();
-  const seats = document.querySelectorAll(".siege");
-  const rows = tableBody.querySelectorAll("tr");
-  seats.forEach(s => s.classList.remove("dimmed", "highlight"));
-  rows.forEach(r => (r.style.display = ""));
-  if (q) {
-    seats.forEach(seat => {
-      const rangee = seat.parentElement.parentElement.querySelector(".numero-rangee").textContent;
-      const id = `${rangee}-${seat.textContent}`;
-      const name = reservations[id];
-      if (name && name.toLowerCase().includes(q)) seat.classList.add("highlight");
-      else seat.classList.add("dimmed");
-    });
-    rows.forEach(row => {
-      const name = row.cells[2].textContent.toLowerCase();
-      if (!name.includes(q)) row.style.display = "none";
-    });
-  }
-}
-searchInput.oninput = applySearch;
+      const ticketHTML = `
+        <div style="border:1px solid #2563eb;border-radius:8px;padding:15px;
+                    max-width:400px;margin:auto;text-align:left;font-family:sans-serif;">
+          <h2 style="color:#2563eb;">Théâtre Saint Martin</h2>
+          <p><strong>Nom :</strong> ${nom}</p>
+          <p><strong>Date :</strong> ${date}</p>
+          <p><strong>Sièges réservés :</strong> ${sieges.join(", ")}</p>
+          <p>Merci pour votre réservation et bon spectacle.</p>
+        </div>
+      `;
 
-function openModal(msg, onConfirm) {
-  modalText.textContent = msg;
-  modalBg.style.display = "flex";
-  nomInput.value = ""; document.getElementById("emailInput").value = "";
-  confirmAction = onConfirm;
-}
-function closeModal() { modalBg.style.display = "none"; confirmAction = null; }
-
-document.getElementById("confirmModal").onclick = async () => {
-  const nom = nomInput.value.trim();
-  const email = document.getElementById("emailInput").value.trim();
-  if (!nom) return alert("Veuillez entrer un nom.");
-  if (confirmAction) await confirmAction(nom, email);
-  closeModal();
-};
-document.getElementById("cancelModal").onclick = closeModal;
-
-// --- Génération du ticket + envoi e-mail ---
-async function genererTicketPDF(nom, sieges, email) {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-  const date = new Date().toLocaleDateString("fr-FR", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
-  // ---- Création du ticket PDF
-  const uid = `${nom}-${Date.now()}`;
-  const qr = new QRious({ value: uid, size: 100 });
-  const qrData = qr.toDataURL();
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(20);
-  doc.text("Theatre Saint Martin", 20, 25);
-  doc.setFontSize(12);
-  doc.text(`Nom : ${nom}`, 20, 45);
-  doc.text(`Date : ${date}`, 20, 55);
-  doc.text("Sièges réservés :", 20, 70);
-  let y = 80;
-  sieges.forEach((id) => {
-    const [r, c] = id.split("-");
-    doc.text(`→ Rangée ${r}, Siège ${c}`, 25, y);
-    y += 8;
-  });
-  doc.addImage(qrData, "PNG", 140, 35, 45, 45);
-  doc.text("Merci pour votre réservation et bon spectacle !", 20, y + 15);
-  doc.setDrawColor(37, 99, 235);
-  doc.rect(10, 15, 190, y + 25, "S");
-
-  // ---- Conversion en blob
-  const blob = doc.output("blob");
-
-  if (email) {
-    console.log("📨 Préparation de l’envoi du ticket à", email);
-    const reader = new FileReader();
-
-    reader.onload = async function () {
-      const base64PDF = reader.result.split(",")[1]; // contenu PDF encodé
       const params = {
         to_email: email,
         to_name: nom,
-        message: "Voici votre ticket 🎭 en pièce jointe.",
-        my_pdf: base64PDF,
+        message: ticketHTML
       };
 
       try {
-        console.log("⏳ Envoi en cours via EmailJS…");
-        const response = await emailjs.send(
-          "service_91fpmi6", // ton vrai service ID
-          "template_xzjnnc2", // ton vrai template ID
+        const res = await emailjs.send(
+          "TON_SERVICE_ID",   // ex: service_123abc
+          "TON_TEMPLATE_ID",  // ex: template_456xyz
           params,
-          2m3fNNkp36a2wCfZn" // ta clé publique
+          "TON_PUBLIC_KEY"
         );
-        console.log("✅ Envoi réussi :", response);
-        alert(`🎫 Ticket envoyé à ${email}`);
-      } catch (error) {
-        console.error("❌ Erreur EmailJS :", error);
-        alert("Erreur EmailJS : " + (error.text || error.message));
+        console.log("Email envoyé :", res);
+
+        // --- Affiche confirmation visuelle ---
+        const confirmation = document.getElementById("confirmation");
+        confirmation.innerHTML = `
+          <h3>Réservation confirmée</h3>
+          <p>Merci ${nom}, votre ticket a été envoyé à <strong>${email}</strong>.</p>
+          <p>Si vous ne voyez pas le message, vérifiez votre dossier "Courrier indésirable".</p>
+        `;
+        confirmation.style.display = "block";
+
+      } catch (err) {
+        console.error("Erreur EmailJS :", err);
+        alert("Erreur EmailJS : " + (err.text || err.message));
       }
+    }
+
+    // === Clic sur "Réserver" ===
+    document.getElementById("boutonReserver").onclick = async () => {
+      const nom = document.getElementById("nomClient").value.trim();
+      const email = document.getElementById("emailClient").value.trim();
+      const siegesSelectionnes = Array.from(document.querySelectorAll(".seat.selected"))
+        .map(s => s.dataset.id);
+
+      if (!nom || !email || siegesSelectionnes.length === 0) {
+        alert("Merci de remplir tous les champs et de choisir au moins un siège.");
+        return;
+      }
+
+      await genererTicketEmail(nom, siegesSelectionnes, email);
     };
-
-    reader.onerror = (e) => {
-      console.error("Erreur de lecture du PDF :", e);
-      alert("Erreur lors de la génération du ticket.");
-    };
-
-    reader.readAsDataURL(blob); // lance la lecture base64
-  } else {
-    // Pas d’adresse email → téléchargement local
-    doc.save(`ticket_${nom}.pdf`);
-  }
-}
-
-
-
-
-document.getElementById("reserveBtn").onclick = () => {
-  if (!selected.length) return alert("Aucun siège sélectionné !");
-  openModal(`Réserver ${selected.length} siège(s) pour :`, async (nom, email) => {
-    selected.forEach(id => (reservations[id] = nom));
-    await genererTicketPDF(nom, selected, email);
-    selected = []; save(); render();
-  });
-};
-
-document.getElementById("resetBtn").onclick = () => {
-  const pwd = prompt("Mot de passe admin pour tout réinitialiser :");
-  if (pwd === adminPassword && confirm("Tout supprimer ?")) {
-    reservations = {}; save(); render();
-  }
-};
-
-document.getElementById("exportBtn").onclick = () => {
-  const rows = [["Rangée","Siège","Nom"], ...Object.entries(reservations).map(([id,nom]) => [...id.split("-"),nom])];
-  const csv = rows.map(r=>r.join(",")).join("\n");
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
-  a.download="reservations.csv"; a.click();
-};
-document.getElementById("printBtn").onclick = () => window.print();
-
-render();
-</script>
+  </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
